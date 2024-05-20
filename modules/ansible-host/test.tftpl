@@ -1,0 +1,56 @@
+%{ for k, group in inventory|map(attribute="groups")|flatten|unique }
+    [${group}]
+    %{ for key,host in inventory }
+        %{ if group in host.groups }
+            ${host.id}  ansible_host=${key)}  ansible_user=${host.vars.ansible_user)}
+        %{ endif }
+    %{ endfor }
+    [${group}:vars]
+    %{ for key,host in inventory }
+        %{ if group in host.groups }
+            %{ for var_key, var_value in host.vars }
+                %{ if var_key != "ansible_user" && var_key != "host_ip" }
+                    ${var_key}=${value}
+                %{ endif }
+            %{ endfor }
+        %{ endif }
+    %{ endfor }
+%{ endfor }
+%{inventory}
+
+%{ for group in group_list }
+    [${group}]
+    %{ for host_key, host in host_list }
+        %{ if group in host.groups }
+            ${host_key}  ansible_host=${host.vars.host_ip)}  ansible_user=${host.vars.ansible_user)}   
+        %{ endif}
+    %{ endfor }
+    [${group}:vars]
+    %{ for host_key, host in host_list }
+        %{ if group in host.groups }
+            %{ for var_key, var_value in host.vars }
+                %{ if var_key != "ansible_user" && var_key != "host_ip" }
+                    ${var_key}=${var_value}
+                %{ endif }
+            %{ endfor }
+        %{ endif}
+    %{ endfor }
+%{ endfor}
+
+
+%{ for group in group_list }
+    [${group}]
+    %{ for host_key, host in host_list }
+        %{ if contains(host.groups, group) }
+            ${host_key}  ansible_host=${host.vars.host_ip}  ansible_user=${host.vars.ansible_user}   
+        %{ endif}
+    %{ endfor }
+    [${group}:vars]
+    %{ for host_key, host in host_list }
+        %{ if contains(host.groups, group) }
+            %{ for var_key, var_value in host.vars }
+                    ${var_key}=${var_value}
+            %{ endfor }
+        %{ endif}
+    %{ endfor }
+%{ endfor}

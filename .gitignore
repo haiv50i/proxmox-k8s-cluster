@@ -1,0 +1,8 @@
+**/.ssh/*
+**/*.tfstate
+*env
+*.log
+**/join-cluster.sh
+**/inventory.yml
+*.txt
+*.bak

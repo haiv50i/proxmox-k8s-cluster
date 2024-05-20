@@ -1,0 +1,173 @@
+---
+  - name: Set timezone
+    timezone:
+      name: Asia/Bangkok
+
+  - name: Wait for dpkg lock to be released
+    shell: "while sudo lsof /var/lib/dpkg/lock-frontend ; do sleep 10; done;"
+
+  - name: Add hosts to /etc/host
+    block:
+      - name: Copy rewrite-etc-host.sh to host
+        ansible.builtin.copy:
+          src: ../plugins/rewrite-etc-hosts.sh
+          dest: /tmp/rewrite-etc-hosts.sh
+          mode: '755'
+      
+      - name: Execute file rewrite-etc-hosts.sh
+        ansible.builtin.shell: |
+          sh /tmp/rewrite-etc-hosts.sh
+        changed_when: true
+
+  - name: Check swap status
+    command: 'swapon --show'
+    register: swap_status
+    changed_when: false
+    ignore_errors: true
+
+  - name: Disable swap {{ swap_status.rc }}
+    when: swap_status.stdout_lines | length > 0
+    block:
+    - name: Disable swap
+      lineinfile:
+        path: /etc/fstab
+        regexp: '^.*swap.*$'
+        line: '# {{ item }}'
+        state: present
+      with_items:
+        - swap
+    - name: Turn off swap
+      command: swapoff -a
+
+  - name: Ensure required modules are loaded
+    copy:
+      content: |
+        overlay
+        br_netfilter
+      dest: /etc/modules-load.d/containerd.conf
+
+  - name: Load kernel modules
+    modprobe:
+      name: "{{ item }}"
+    loop:
+      - overlay
+      - br_netfilter
+
+  - name: Configure sysctl settings for Kubernetes CRI
+    sysctl:
+      name: "{{ item.name }}"
+      value: "{{ item.value }}"
+      sysctl_set: yes
+      state: present
+    loop:
+      - { name: "net.bridge.bridge-nf-call-iptables", value: 1 }
+      - { name: "net.ipv4.ip_forward", value: 1 }
+      - { name: "net.bridge.bridge-nf-call-ip6tables", value: 1 }
+
+  - name: Reload sysctl
+    ansible.builtin.command: sysctl --system
+    changed_when: false
+  
+  # - name: Install prerequisites
+  #   apt:
+  #     name: "{{ item }}"
+  #     state: latest
+  #     update_cache: yes
+  #     # cache_valid_time: 86400 # 1 day
+  #   loop:
+  #     - apt-transport-https
+  #     - ca-certificates
+  #     - curl
+  #     - gnupg2
+  #     - software-properties-common
+
+  - name: Add Kubernetes apt repository key
+    shell: curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/kubernetes-archive-keyring.gpg
+    args:
+      creates: /etc/apt/trusted.gpg.d/kubernetes-archive-keyring.gpg
+
+  - name: Add Kubernetes apt repository
+    apt_repository:
+      repo: "deb [signed-by=/etc/apt/trusted.gpg.d/kubernetes-archive-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /"
+      state: present
+
+  - name: Add Docker apt repository key
+    shell: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/docker.gpg
+    args:
+      creates: /etc/apt/trusted.gpg.d/docker.gpg
+
+  - name: Add Docker apt repository
+    apt_repository:
+      repo: "deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/docker.gpg] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+      state: present
+
+  # - name: Update apt package index
+  #   apt:
+  #     update_cache: yes
+
+  - name: Install Kubernetes packages
+    apt:
+      name: "{{ item }}"
+      state: present
+    loop:
+      - kubelet
+      - kubeadm
+      - kubectl
+
+  - name: Pin Kubernetes packages
+    dpkg_selections:
+      name: "{{ item }}"
+      selection: hold
+    loop:
+      - kubelet
+      - kubeadm
+      - kubectl
+
+  - name: Install containerd.io
+    apt:
+      name: containerd.io
+      state: present
+  - name: Create directory if not exists
+    file:
+      path: /etc/containerd
+      state: directory
+      mode: '0755'
+
+  - name: Fetch containerd default config and save to file
+    command: containerd config default
+    register: containerd_config
+    changed_when: false
+
+  - name: Write containerd config to file
+    copy:
+      content: "{{ containerd_config.stdout }}"
+      dest: /etc/containerd/config.toml
+    changed_when: false
+
+  - name: Modify containerd config to use systemd cgroups
+    replace:
+      path: /etc/containerd/config.toml
+      regexp: 'SystemdCgroup = false'
+      replace: 'SystemdCgroup = true'
+    changed_when: false
+
+  - name: Ensure containerd service is running and enabled
+    service:
+      name: containerd
+      state: started
+      enabled: yes
+
+  - name: Install cri-tools
+    apt:
+      name: cri-tools
+      state: present
+
+  - name: Set CRI-O runtime and image endpoints
+    command: crictl config --set runtime-endpoint=unix:///run/containerd/containerd.sock --set image-endpoint=unix:///run/containerd/containerd.sock
+    changed_when: false
+
+  - name: Restart containerd
+    service:
+      name: containerd
+      state: restarted
+    changed_when: false

@@ -1,0 +1,30 @@
+---
+- name: Deploy common packages
+  hosts: all
+  become: true
+  roles:
+    - bootstrap
+  vars:
+    #    - ansible_ssh_private_key_file: /data/demo/.ssh/ubuntu
+    - ansible_host_key_checking: false
+
+# ====== Setup & Configure Master Node ==============
+- name: Setup Master
+  hosts: k8s-master
+  become: true
+  roles:
+    - init-master
+  vars:
+    #- ansible_ssh_private_key_file: /data/demo/.ssh/ubuntu
+    - ansible_host_key_checking: false
+  # tags: master_check
+
+# ==== Play to setup and configure k8s worker nodes ==========
+- name: Join cluster
+  hosts: k8s-worker
+  become: true
+  roles:
+    - init-worker
+  vars:
+    #- ansible_ssh_private_key_file: /data/demo/.ssh/ubuntu
+    - ansible_host_key_checking: false

@@ -1,0 +1,43 @@
+#cloud-config
+bootcmd:
+  - apt-get update
+autoinstall:
+  version: 1
+  locale: en_US
+  keyboard:
+    layout: en
+  ssh:
+    install-server: true
+    allow-pw: false
+    disable_root: true
+    ssh_quiet_keygen: true
+    allow_public_ssh_keys: true
+  packages:
+    - sudo
+  storage:
+    layout:
+      name: direct
+    swap:
+      size: 0
+  user-data:
+    package_update: true
+    package_upgrade: false
+    timezone: Asia/Ho_Chi_Minh
+    users:
+      - name: ubuntu
+        groups: [adm, sudo]
+        lock-passwd: false
+        sudo: ALL=(ALL) NOPASSWD:ALL
+        shell: /bin/bash
+        ssh_authorized_keys:
+          - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDoyu5NSBKfAsDUf9Ah9845mOscDZqSzoT1fgJcI62kCq4dS0UzzKvWkfpU8njG1C4ULAQLkGbYMJQJBSVlFYsYfPxt6vt2as0Y+kEzE+q8sP04JP7WnxGogVZV0C+qWs90qtJMmwy2xSXxJgXjZ3+46rV+9lqT4bF4BvolEx37Wu5ejn9Fbo8aomv3R5UCRiSclYhp0Gt2Q+Fm3oeu4PMvfHkdAkM8Juh+HsJQV5EWfw4SbGY7ppxgTOOsSwMxErxyursRKFmmtXYMdCNubKaQGYdLv6ReI5oJnu0Vs06en07HDJqL28RSXKgiF2ttdBv9JOm+HmWPSdhc3M9MgUeOi8ueAkRxruxbjbk0pwF4ycnLjnIS7abp/ScwcyjP+NhbmsAAjlblDPIp2+ncsAlwnUSP15r1TOFBRhoh8CMPJ8mwoblpD0+3ijrNk3q0owdEFokgIsvdSOjnjlyvKUhUY8gddVHC9zRu5EwjHXJG+KUw0fde1jXqge4tmixyGJ41JrHvheFUzJ6CYWzzjTvlyhFaPfWstdYeAHIcMzPdjmmNzv5LZggWP5iUwmMYcGa5DOLP+b3BHXvYvK9mNAoHO62YD8axdgpluWXs47ziJxZkG15TWkoqUqJblNQ6sU8h4y+uiDHuly2vHUwcNg68xzXmVZOxB5DaHOj9RElqMQ== haiv5@haiv5x1
+  late-commands:
+    - curtin in-target -- apt-get update
+    - curtin in-target -- apt-get install qemu-guest-agent
+manage_resolv_conf: true
+
+resolv_conf:
+  nameservers: ['8.8.4.4', '8.8.8.8']
+  options:
+    rotate: true
+    timeout: 1

@@ -1,0 +1,22 @@
+%{ for group in group_list ~}
+[${group}]
+%{ for host_name, host in host_list ~}
+%{ if contains(host.group, group) ~}
+${host_name}  ansible_host=${host.ip}  ansible_user=${host.user}
+%{ endif ~}  
+%{ endfor ~}
+[${group~}:vars]
+%{ for host_name, host in host_list ~}
+%{ if contains(host.group, group) ~}
+%{ if can(host.vars)~}
+%{ for var_key, var_value in host.vars ~}
+%{ if var_key == "ansible_ssh_private_key_file" ~}
+${host.ip} ${var_key~}=${var_value}
+%{ else ~}
+${var_key~}=${var_value}
+%{ endif ~}
+%{ endfor ~}
+%{ endif ~}
+%{ endif ~}
+%{ endfor ~}
+%{ endfor~}

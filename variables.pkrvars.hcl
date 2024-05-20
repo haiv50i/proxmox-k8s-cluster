@@ -1,0 +1,8 @@
+# Variable Definitions
+api_url = ""
+
+proxmox_api_token_id = ""
+
+proxmox_api_token_secret = ""
+
+
