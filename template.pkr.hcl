@@ -16,18 +16,16 @@ locals {
   ssh_path  = "${path.cwd}/.ssh"
   
 }
-source "null" "create_ssh_private_key_file" {
+source "null" "check_ssh_private_key" {
   communicator = "none"
 }
 
 
 build {
-  sources = ["source.null.create_ssh_private_key_file"]
+  sources = ["source.null.check_ssh_private_key"]
   provisioner "shell-local" {
     inline = [
-      "if [ ! -d ${local.ssh_path} ]; then mkdir -p ${local.ssh_path}; fi",
-      "if [ ! -f '${local.ssh_path}/ubuntu' ]; then touch '${local.ssh_path}/ubuntu'; fi",
-      "echo ${var.private_key} > ${local.ssh_path}/ubuntu"
+      "if [ ! -f '${local.ssh_path}/ubuntu' ]; echo 'SSH private key not found'; fi ", 
     ]
   }
 }
