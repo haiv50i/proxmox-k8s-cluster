@@ -22,12 +22,10 @@ source "null" "create_ssh_private_key_file" {
 
 
 build {
-  sources = ["source.null.create_ssh_private_key_file"]
+  sources = ["source.null.check_ssh_private_key_file"]
   provisioner "shell-local" {
     inline = [
-      "if [ ! -d ${local.ssh_path} ]; then mkdir -p ${local.ssh_path}; fi",
-      "if [ ! -f '${local.ssh_path}/ubuntu' ]; then touch '${local.ssh_path}/ubuntu'; fi",
-      "echo ${var.private_key} > ${local.ssh_path}/ubuntu"
+      "if [ ! -f '${local.ssh_path}/ubuntu' ]; then echo 'SSH private key not found'; fi ", 
     ]
   }
 }

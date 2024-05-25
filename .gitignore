@@ -4,5 +4,8 @@
 *.log
 **/join-cluster.sh
 **/inventory.yml
+**/inventory.ini
 *.txt
 *.bak
+.terraform*
+**/.terraform
