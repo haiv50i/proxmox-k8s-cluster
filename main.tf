@@ -89,7 +89,7 @@ module "proxmox-vm" {
 module "ansible-playbook" {
   source = "./modules/ansible-playbook"
   rewrite_host_list = module.ansible-host.rewrite_host_list
-  ansible_playbooks_path = "${path.cwd}${var.ansible_playbooks_path}"
+  ansible_playbooks_path = "${var.ansible_playbooks_path}"
   depends_on = [
     module.proxmox-vm
   ]
