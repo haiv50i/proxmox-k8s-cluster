@@ -54,6 +54,7 @@ locals {
 resource "null_resource" "rendered_inventory_file" {
   triggers = {
     inventory = "${md5(local.rendered_inventory)}"
+    always_run = timestamp()
   }
 
   provisioner "local-exec" {
