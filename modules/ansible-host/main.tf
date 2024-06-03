@@ -58,6 +58,6 @@ resource "null_resource" "rendered_inventory_file" {
   }
 
   provisioner "local-exec" {
-    command = "echo '${local.rendered_inventory}' > ${path.cwd}/modules/ansible-host/inventory.yml"
+    command = "echo '${local.rendered_inventory}' | sudo tee ${path.cwd}/modules/ansible-host/inventory.ini"
   }
 }
