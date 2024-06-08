@@ -7,5 +7,5 @@
 **/inventory.ini
 *.txt
 *.bak
-.terraform*
 **/.terraform
+**/.terraform.lock.hcl
