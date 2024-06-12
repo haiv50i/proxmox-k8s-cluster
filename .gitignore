@@ -9,4 +9,7 @@
 *.bak
 **/.terraform
 **/.terraform.lock.hcl
+<<<<<<< dev
 **/rewrite-etc-hosts.sh
+=======
+>>>>>>> main
