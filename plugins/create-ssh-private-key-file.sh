@@ -31,4 +31,3 @@ fi
 
 # Ensure proper permissions
 chmod 600 "$SSH_PRIVATE_KEY_FILE"
-

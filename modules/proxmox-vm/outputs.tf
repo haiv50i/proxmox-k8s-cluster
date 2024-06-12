@@ -25,3 +25,8 @@
 # output "k8s-worker" {
 #   value = resource.proxmox_vm_qemu.k8s-worker[*]
 # }
+
+output "private_ips" {
+  value = [for instance_key, instance_value in resource.proxmox_vm_qemu.k8s-cluster : instance_value.default_ipv4_address]
+}
+

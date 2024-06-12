@@ -6,7 +6,7 @@ variable "ansible_playbooks_path" {
 # Static inventory file path
 variable "ansible_inventory_file" {
   type = string
-  default = "/modules/ansible-host/inventory.yml"
+  default = "/modules/ansible-host/inventory.ini"
 }
 
 # Dynamic inventory file path 
