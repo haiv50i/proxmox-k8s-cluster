@@ -25,7 +25,7 @@ build {
   sources = ["source.null.check_ssh_private_key"]
   provisioner "shell-local" {
     inline = [
-      "if [ ! -f '${local.ssh_path}/ubuntu' ]; echo 'SSH private key not found'; fi ", 
+      "if [ ! -f '${local.ssh_path}/ubuntu' ]; then echo 'SSH private key not found'; fi ", 
     ]
   }
 }
