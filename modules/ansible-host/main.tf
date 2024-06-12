@@ -54,9 +54,10 @@ locals {
 resource "null_resource" "rendered_inventory_file" {
   triggers = {
     inventory = "${md5(local.rendered_inventory)}"
+    always_run = timestamp()
   }
 
   provisioner "local-exec" {
-    command = "echo '${local.rendered_inventory}' > ${path.cwd}/modules/ansible-host/inventory.yml"
+    command = "echo '${local.rendered_inventory}' | sudo tee ${path.cwd}/modules/ansible-host/inventory.ini"
   }
 }
